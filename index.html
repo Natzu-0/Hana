@@ -331,6 +331,7 @@
     <div class="memory-badge" id="memory-badge"></div>
   </div>
 
+
   <script>
 
     // ── PROMPTS ──
@@ -608,7 +609,8 @@ Return only the summary. No preamble. No labels.`;
 
     sendBtn.addEventListener("click", sendMessage);
 
-    document.getElementById("start-btn").addEventListener("click", saveKey);
+    const startBtn = document.getElementById("start-btn");
+    if (startBtn) startBtn.addEventListener("click", saveKey);
     document.getElementById("btn-new").addEventListener("click", confirmNewSession);
     document.getElementById("btn-reset").addEventListener("click", confirmReset);
 
