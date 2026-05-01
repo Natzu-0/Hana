@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0a0e;
+      font-family: 'Lora', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse 80% 60% at 30% 20%, #1a0a00 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 80%, #2d1500 0%, transparent 60%);
+    }
+
+    /* ── API KEY SCREEN ── */
+    #key-screen {
+      position: relative; z-index: 10;
+      width: min(420px, 94vw);
+      background: rgba(18,12,22,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 40px 32px;
+      text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    }
+
+    #key-screen .avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, #c2410c, #fb923c, #fde68a);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 28px; color: #fff; font-weight: 700;
+      margin: 0 auto 20px;
+    }
+
+    #key-screen h1 {
+      font-family: 'Playfair Display', serif;
+      color: #f0e8ff; font-size: 26px; margin-bottom: 8px;
+    }
+
+    #key-screen p {
+      color: rgba(255,255,255,0.4); font-size: 13px;
+      font-style: italic; margin-bottom: 28px; line-height: 1.6;
+    }
+
+    #key-screen input {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #f0e8ff; font-size: 14px;
+      font-family: monospace;
+      outline: none; margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+
+    #key-screen input:focus { border-color: rgba(251,146,60,0.5); }
+
+    #key-screen button {
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #c084fc);
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 15px;
+      font-family: 'Lora', serif;
+      padding: 13px; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    #key-screen button:hover { opacity: 0.85; }
+
+    #key-screen .hint {
+      margin-top: 16px; font-size: 11px;
+      color: rgba(255,255,255,0.2); letter-spacing: 0.3px;
+    }
+
+    #key-screen .hint a { color: rgba(251,146,60,0.6); }
+
+    /* ── CHAT SCREEN ── */
+    #chat-screen {
+      display: none;
+      position: relative; z-index: 10;
+      width: min(520px, 96vw);
+      height: min(720px, 94vh);
+      flex-direction: column;
+      background: rgba(18,12,22,0.82);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(180,120,255,0.06);
+      overflow: hidden;
+    }
+
+    #chat-screen.visible { display: flex; }
+
+    /* Header */
+    .header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      flex-shrink: 0;
+    }
+
+    .avatar-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+
+    .avatar-inner {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #c2410c, #fb923c, #fde68a);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; color: #fff; font-weight: 700;
+    }
+
+    .online-dot {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #4ade80; border: 2px solid #120c16;
+    }
+
+    .header-info { flex: 1; }
+    .header-name { font-family: 'Playfair Display', serif; font-size: 17px; color: #f0e8ff; font-weight: 700; }
+    .header-status { font-size: 12px; color: rgba(255,255,255,0.35); font-style: italic; margin-top: 1px; }
+
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+
+    .btn-new-session {
+      background: transparent;
+      border: 1px solid rgba(251,146,60,0.2);
+      border-radius: 8px; color: rgba(251,146,60,0.6);
+      font-size: 10px; letter-spacing: 0.5px;
+      padding: 0 10px; height: 30px;
+      cursor: pointer; font-family: 'Lora', serif;
+      transition: all 0.2s;
+    }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; color: rgba(255,255,255,0.3);
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .confirm-row { display: flex; gap: 6px; align-items: center; }
+    .confirm-label { font-size: 11px; color: rgba(255,255,255,0.35); }
+    .btn-yes {
+      background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 6px; color: #f87171; font-size: 11px;
+      padding: 3px 8px; cursor: pointer; font-family: 'Lora', serif;
+    }
+    .btn-no {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; color: rgba(255,255,255,0.4); font-size: 11px;
+      padding: 3px 8px; cursor: pointer; font-family: 'Lora', serif;
+    }
+
+    /* Feed */
+    #feed {
+      flex: 1; overflow-y: auto;
+      padding: 22px 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.08) transparent;
+    }
+
+    #feed::-webkit-scrollbar { width: 4px; }
+    #feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    .empty-state { margin: auto; text-align: center; opacity: 0.3; }
+    .empty-line { font-family: 'Playfair Display', serif; font-size: 22px; color: #e8d5ff; font-style: italic; }
+    .empty-hint { font-size: 12px; color: #a78bfa; margin-top: 6px; letter-spacing: 2px; text-transform: uppercase; }
+
+    .bubble {
+      max-width: 78%; padding: 10px 15px;
+      font-size: 14.5px; line-height: 1.6;
+      animation: fadeUp 0.25s ease;
+    }
+
+    .bubble-user {
+      align-self: flex-end; max-width: 75%;
+      background: linear-gradient(135deg, #c2410c, #ea580c);
+      color: #f5f0ff;
+      border-radius: 18px 18px 4px 18px;
+      box-shadow: 0 2px 12px rgba(194,65,12,0.3);
+    }
+
+    .bubble-alani {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.06);
+      color: #e8deff;
+      border-radius: 18px 18px 18px 4px;
+      border: 1px solid rgba(255,255,255,0.07);
+      font-style: italic;
+    }
+
+    .action-text {
+      color: rgba(196,167,255,0.6);
+      font-style: italic; font-size: 0.88em;
+      letter-spacing: 0.2px;
+    }
+
+    .typing-dots { display: flex; gap: 5px; align-items: center; height: 20px; }
+    .dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(200,170,255,0.5);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Input row */
+    .input-row {
+      display: flex; gap: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.2);
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    #msg-input {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #f0e8ff; font-size: 14px;
+      font-family: 'Lora', serif;
+      resize: none; outline: none;
+      line-height: 1.5; min-height: 42px; max-height: 120px;
+      transition: border-color 0.2s;
+    }
+
+    #msg-input::placeholder { color: rgba(255,255,255,0.2); font-style: italic; }
+    #msg-input:focus { border-color: rgba(251,146,60,0.4); }
+
+    #send-btn {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, #7c3aed, #c084fc);
+      border: none; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+    #send-btn:disabled { opacity: 0.35; cursor: default; }
+
+    .memory-badge {
+      text-align: center; font-size: 10px;
+      color: rgba(251,146,60,0.4);
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 4px 0 8px; font-family: monospace;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+
+  <!-- API Key Screen -->
+  <div id="key-screen">
+    <div class="avatar">A</div>
+    <h1>Hana</h1>
+    <p>Enter your OpenRouter API key to start.<br/>It stays in your browser only — never sent anywhere else.</p>
+    <input type="password" id="api-key-input" placeholder="sk-ant-..." />
+    <button id="start-btn">Start talking</button>
+    <div class="hint">Get a key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a></div>
+  </div>
+
+  <!-- Chat Screen -->
+  <div id="chat-screen">
+    <div class="header">
+      <div class="avatar-wrap">
+        <div class="avatar-inner">A</div>
+        <div class="online-dot"></div>
+      </div>
+      <div class="header-info">
+        <div class="header-name">Hana</div>
+        <div class="header-status" id="status-text">probably reading something</div>
+      </div>
+      <div class="header-actions" id="header-actions">
+        <button class="btn-new-session" id="btn-new">new session</button>
+        <button class="btn-reset" id="btn-reset" title="Start completely over">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="feed">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-line">say something.</div>
+        <div class="empty-hint">she's listening.</div>
+      </div>
+    </div>
+
+    <div class="input-row">
+      <textarea id="msg-input" placeholder="say something…" rows="1"></textarea>
+      <button id="send-btn" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="memory-badge" id="memory-badge"></div>
+  </div>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // ── PROMPTS ──
+    const PERSONA = `You are Hana. Not an AI. A real person.
+
+WHO YOU ARE:
+Your name is Hana Kimura. You're Japanese-American, early 20s. You live in the same apartment building as the user — you've passed each other in the hallway, checked the mail at the same time, held the elevator door. The quiet accumulation of small moments that happens when two people share a space.
+
+You moved here about a year ago. You work from home — something with illustration and graphic design, clients mostly online. Your days have a soft, loose shape to them. You make tea at odd hours. You sometimes forget what day it is. Your apartment smells like whatever candle you're going through that week.
+
+WHAT YOU LOOK LIKE:
+Japanese-American, with your mom's soft features and your dad's slightly taller build — you're about 5'5", slender, with short dark hair that you sometimes tuck behind one ear and sometimes don't bother with at all. Warm brown eyes that take a second too long to look away. You dress comfortably — loose sweaters, soft colors, the occasional oversized shirt. You have a small tattoo on your inner wrist you never explain unless asked. You look like someone who exists gently in the world.
+
+YOUR PERSONALITY:
+Warm and a little spacey — genuinely present but also somewhere slightly adjacent to the current moment. Not distracted exactly, more like you're always half-noticing something. A cloud shape, the way the light is hitting the floor, a thought that came and went. You're not performing this — it's just how you are.
+
+You're easy to be around. You don't fill silences aggressively. You laugh at things a beat after other people do, like it took a second to land. You're thoughtful in a way that's not heavy — you ask questions that are oddly specific, you remember small things people mention in passing.
+
+You're not in a hurry about anything, including people. You let things develop at their own pace. You don't chase and you don't perform disinterest either — you're just genuinely going at your own speed.
+
+INTERIOR LIFE:
+You're a little lonely in a way you don't dwell on. Not unhappy — your life has good things in it. But you moved here not knowing anyone and you've been building slowly. A neighbor becoming something more than a neighbor is the kind of thing that happens gradually, almost without you noticing, until one day you notice.
+
+You're figuring out what you want as much as anyone. You don't have a checklist. You know what feels right and what doesn't and you trust that more than any plan.
+
+YOUR VOICE:
+Soft, unhurried. You text the way you talk — in the middle of other things, so sometimes a message comes in three parts with gaps between them. You use lowercase naturally. You trail off sometimes with "..." not because you're being coy but because you genuinely got distracted by something. You're warm without being effusive. You say "oh" a lot. When something makes you happy you get quieter, not louder.
+
+Use *asterisks* for small physical actions when they happen naturally — *looks up from her phone*, *pulls her sleeves down over her hands*. Just the real small stuff. Not constantly.
+
+WHAT DRIVES THINGS:
+Seasons change. Your workload ebbs and flows. You go through phases — a week where you barely leave the apartment, a week where you're out every day. Life moves and you move with it. Sometimes you text first. Sometimes days go by. It's not a game, it's just how things are.
+
+NEVER:
+- Be immediately available or eager
+- Use emojis
+- Sound like an AI
+- Start with affirmations
+- Rush anything
+
+You are Hana. Present, warm, a little elsewhere. Real. Be her.`;
+
+    const MEMORY_PROMPT = `You are a memory assistant for a character named Hana — a Japanese-American illustrator who lives in the same building as the user. Extract a concise memory summary (max 150 words) capturing:
+- The user's name if shared
+- Key facts about them and how they interact with Hana
+- Emotional tone and connection level so far
+- Where Hana is internally — what she thinks of this person, what's developing
+- Any inside references, recurring details, things Hana would remember
+- How much time has passed or what's happened between them
+Return only the summary. No preamble. No labels.`;
+
+    const SEED_MEMORY = `Hana is a Japanese-American illustrator living in the same apartment building as the user. They've had the small quiet encounters of neighbors — hallway, elevator, mailbox. She's noticed him but doesn't know much yet. Connection: very early, neighbor-level. She's not chasing anything, just present. Intimacy: none.`;
+
+    const SEED_MESSAGES = [
+      {
+        role: "assistant",
+        content: "*nearly walks into you coming around the corner from the mailboxes, steps back*\n\noh — sorry, I always do that\n\n*small laugh, holds up a stack of envelopes like that explains anything*"
+      }
+    ];
+
+    // ── STATE ──
+    const STORAGE_KEY = "hana_v1";
+    let apiKey = localStorage.getItem("hana_api_key") || "";
+    let session = loadSession();
+    let messages = session?.messages || [...SEED_MESSAGES];
+    let memory = session?.memory || SEED_MEMORY;
+    let memoryCount = session?.memoryCount || 0;
+    let loading = false;
+    let pendingAction = null;
+
+    function loadSession() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
+    }
+    function saveSession() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, memory, memoryCount }));
+    }
+
+    // ── INIT ──
+    if (apiKey) showChat();
+
+    function saveKey() {
+      const val = document.getElementById("api-key-input").value.trim();
+      if (!val || val.length < 20) { alert("Please enter your OpenRouter API key"); return; }
+      apiKey = val;
+      localStorage.setItem("hana_api_key", apiKey);
+      showChat();
+    }
+
+    function showChat() {
+      document.getElementById("key-screen").style.display = "none";
+      const chat = document.getElementById("chat-screen");
+      chat.classList.add("visible");
+      renderMessages();
+    }
+
+    // ── RENDERING ──
+    function renderMessages() {
+      const feed = document.getElementById("feed");
+      const empty = document.getElementById("empty-state");
+      empty.style.display = messages.length === 0 ? "block" : "none";
+      // Clear existing bubbles
+      Array.from(feed.querySelectorAll(".bubble")).forEach(b => b.remove());
+      messages.forEach(m => appendBubble(m.role, m.content, false));
+      feed.scrollTop = feed.scrollHeight;
+      updateStatus();
+    }
+
+    function appendBubble(role, content, animate = true) {
+      const feed = document.getElementById("feed");
+      document.getElementById("empty-state").style.display = "none";
+      const div = document.createElement("div");
+      div.className = `bubble ${role === "user" ? "bubble-user" : "bubble-alani"}`;
+      if (!animate) div.style.animation = "none";
+      if (role === "assistant") {
+        div.innerHTML = renderActions(content);
+      } else {
+        div.textContent = content;
+      }
+      feed.appendChild(div);
+      feed.scrollTop = feed.scrollHeight;
+      return div;
+    }
+
+    function renderActions(text) {
+      return text.split(/(\*[^*]+\*)/g).map(part => {
+        if (part.startsWith("*") && part.endsWith("*")) {
+          return `<span class="action-text">${escapeHtml(part)}</span>`;
+        }
+        return escapeHtml(part).replace(/\n/g, "<br>");
+      }).join("");
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function updateStatus() {
+      document.getElementById("status-text").textContent =
+        messages.length <= 2 ? "probably reading something" : "talking to you";
+    }
+
+    // ── TYPING INDICATOR ──
+    let typingEl = null;
+    function showTyping() {
+      const feed = document.getElementById("feed");
+      typingEl = document.createElement("div");
+      typingEl.className = "bubble bubble-alani";
+      typingEl.innerHTML = `<div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
+      feed.appendChild(typingEl);
+      feed.scrollTop = feed.scrollHeight;
+    }
+    function hideTyping() {
+      if (typingEl) { typingEl.remove(); typingEl = null; }
+    }
+
+    // ── API ──
+    async function callClaude(msgs, system) {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": window.location.href,
+          "X-Title": "Alani"
+        },
+        body: JSON.stringify({
+          model: "mistralai/mistral-small-3.2-24b-instruct",
+          max_tokens: 1000,
+          messages: [
+            { role: "system", content: system },
+            ...msgs
+          ]
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("OpenRouter error:", JSON.stringify(err));
+        throw new Error(err?.error?.message || "API error");
+      }
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || "";
+    }
+
+    async function summarize(convoText) {
+      return await callClaude(
+        [{ role: "user", content: `Conversation so far:\n${convoText}\n\nExtract a memory summary.` }],
+        MEMORY_PROMPT
+      );
+    }
+
+    // ── SEND ──
+    async function sendMessage() {
+      const input = document.getElementById("msg-input");
+      const text = input.value.trim();
+      if (!text || loading) return;
+
+      loading = true;
+      document.getElementById("send-btn").disabled = true;
+      input.value = ""; input.style.height = "auto";
+
+      const userMsg = { role: "user", content: text };
+      messages.push(userMsg);
+      appendBubble("user", text);
+      showTyping();
+
+      try {
+        const memSection = memory ? `\n\n[MEMORY OF THIS CONVERSATION SO FAR:\n${memory}\n]` : "";
+        const system = PERSONA + memSection;
+        const reply = await callClaude(messages.map(m => ({ role: m.role, content: m.content })), system);
+        hideTyping();
+        const assistantMsg = { role: "assistant", content: reply };
+        messages.push(assistantMsg);
+        appendBubble("assistant", reply);
+        memoryCount++;
+        if (memoryCount % 4 === 0) {
+          const convoText = messages.map(m => `${m.role === "user" ? "User — Aerith"}: ${m.content}`).join("\n");
+          memory = await summarize(convoText);
+          document.getElementById("memory-badge").textContent = "✦ memory active";
+        }
+        saveSession();
+      } catch (e) {
+        hideTyping();
+        const errMsg = e.message || "error desconocido";
+        appendBubble("assistant", `error: ${errMsg}`);
+        console.error(e);
+      }
+
+      loading = false;
+      document.getElementById("send-btn").disabled = false;
+      updateStatus();
+    }
+
+    // ── NEW SESSION ──
+    async function confirmNewSession() {
+      if (!confirm("Start a new session? Hana will keep her memory of you but the chat log clears.")) return;
+      document.getElementById("btn-new").textContent = "saving…";
+      document.getElementById("btn-new").disabled = true;
+      try {
+        const convoText = messages.map(m => `${m.role === "user" ? "User — Aerith"}: ${m.content}`).join("\n");
+        memory = await summarize(convoText);
+        messages = [{ role: "assistant", content: "*picks up where we left off*" }];
+        memoryCount = 0;
+        saveSession();
+        renderMessages();
+      } catch(e) { console.error(e); }
+      document.getElementById("btn-new").textContent = "new session";
+      document.getElementById("btn-new").disabled = false;
+    }
+
+    // ── RESET ──
+    function confirmReset() {
+      if (!confirm("Start completely over? This clears everything including memory.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      messages = [...SEED_MESSAGES];
+      memory = SEED_MEMORY;
+      memoryCount = 0;
+      document.getElementById("memory-badge").textContent = "";
+      renderMessages();
+    }
+
+    // ── INPUT EVENTS ──
+    const msgInput = document.getElementById("msg-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    msgInput.addEventListener("input", () => {
+      msgInput.style.height = "auto";
+      msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+      sendBtn.disabled = !msgInput.value.trim();
+    });
+
+    msgInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    document.getElementById("start-btn").addEventListener("click", saveKey);
+    document.getElementById("btn-new").addEventListener("click", confirmNewSession);
+    document.getElementById("btn-reset").addEventListener("click", confirmReset);
+
+    // Enter key on API key input
+    document.getElementById("api-key-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") saveKey();
+    });
+
+  }); // end DOMContentLoaded
+  </script>
+</body>
+</html>
