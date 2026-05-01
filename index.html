@@ -413,6 +413,7 @@ Return only the summary. No preamble. No labels.`;
 
     function saveKey() {
       const val = document.getElementById("api-key-input").value.trim();
+      alert("Key length: " + val.length + " | First 10: " + val.substring(0, 10));
       if (!val || val.length < 20) { alert("Please enter your OpenRouter API key"); return; }
       apiKey = val;
       localStorage.setItem("hana_api_key", apiKey);
