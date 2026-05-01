@@ -286,7 +286,7 @@
     <h1>Hana</h1>
     <p>Enter your OpenRouter API key to start.<br/>It stays in your browser only — never sent anywhere else.</p>
     <input type="password" id="api-key-input" placeholder="sk-or-v1-..." />
-    <button onclick="(function(){ var val = document.getElementById('api-key-input').value.trim(); alert('got: ' + val.length); if(val.length >= 20){ localStorage.setItem('hana_api_key', val); document.getElementById('key-screen').style.display='none'; document.getElementById('chat-screen').classList.add('visible'); } })()">Start talking</button>
+    <button onclick="(function(){ var val = document.getElementById('api-key-input').value.trim(); if(val.length >= 20){ localStorage.setItem('hana_api_key', val); showChat(); } else { alert('Please paste your full OpenRouter API key'); } })()">Start talking</button>
     <div class="hint">Get a key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a></div>
   </div>
 
@@ -420,7 +420,8 @@ Return only the summary. No preamble. No labels.`;
       showChat();
     }
 
-    function showChat() {
+    window.showChat = function showChat() {
+      apiKey = localStorage.getItem("hana_api_key") || "";
       document.getElementById("key-screen").style.display = "none";
       const chat = document.getElementById("chat-screen");
       chat.classList.add("visible");
